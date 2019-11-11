@@ -57,6 +57,7 @@ const UserList = styled.div`
     border-radius: 5px;
     width: 430px;
     margin: 1rem;
+
     h2 {
       border-bottom: 1px solid black;
       padding: 0 1rem;
@@ -76,30 +77,34 @@ function Signup({ status, errors, touched, isSubmitting }) {
   }, [status]);
 
   return (
-    <>
+    <Style>
       <Form>
         <Field type='text' name='name' placeholder='Name' />
-        {touched.name && errors.name && <span>{errors.name}</span>}
+        <p>{touched.name && errors.name && errors.name}</p>
         <Field type='email' name='email' placeholder='Email' />
-        {touched.email && errors.email && <span>{errors.email}</span>}
+        <p>{touched.email && errors.email && errors.email}</p>
         <Field type='password' name='password' placeholder='Password' />
-        {touched.password && errors.password && <span>{errors.password}</span>}
+        <p>{touched.password && errors.password && errors.password}</p>
         <label>
           <Field type='checkbox' name='tos' /> Accept the Terms of Service
         </label>
-        {touched.tos && errors.tos && <span>{errors.tos}</span>}
+        <p>{touched.tos && errors.tos && errors.tos}</p>
         <button type='submit' disabled={isSubmitting}>
           Submit!
         </button>
       </Form>
-      {users.map(user => (
-        <div key={user.id}>
-          <h2>Name: {user.name}</h2>
-          <h4>Email: {user.email}</h4>
-          <p>Account created at {user.createdAt}</p>
-        </div>
-      ))}
-    </>
+      {users.length > 0 && (
+        <UserList>
+          {users.map(user => (
+            <div key={user.id}>
+              <h2>Name: {user.name}</h2>
+              <h4>Email: {user.email}</h4>
+              <p>Account created at {user.createdAt}</p>
+            </div>
+          ))}
+        </UserList>
+      )}
+    </Style>
   );
 }
 
@@ -117,28 +122,25 @@ export default withFormik({
     email: yup
       .string()
       .email('Please provide a valid email address')
-      .required('Please provide your email'),
+      .required('Please provide your email')
+      .notOneOf(['waffle@syrup.com'], 'That email is already taken.'),
     password: yup
       .string()
       .min(6, 'Please set a password at least 6 characters long')
       .required('Please set a password at least 6 characters long'),
     tos: yup.bool().oneOf([true], 'You must accept the Terms of Service')
   }),
-  handleSubmit(values, { setStatus, resetForm, setErrors, setSubmitting }) {
-    if (values.email === 'waffle@syrup.com') {
-      setErrors({ email: 'That email is already taken' });
-    } else {
-      axios
-        .post('https://reqres.in/api/users', values)
-        .then(res => {
-          setStatus(res.data);
-          resetForm();
-          setSubmitting(false);
-        })
-        .catch(err => {
-          console.log(err);
-          setSubmitting(false);
-        });
-    }
+  handleSubmit(values, { setStatus, resetForm, setSubmitting }) {
+    axios
+      .post('https://reqres.in/api/users', values)
+      .then(res => {
+        setStatus(res.data);
+        resetForm();
+        setSubmitting(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setSubmitting(false);
+      });
   }
 })(Signup);
